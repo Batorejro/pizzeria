@@ -60,7 +60,10 @@
       thisProduct.data = data;
 
       thisProduct.renderInMenu();
+      thisProduct.getElements();
       thisProduct.initAccordion();
+      thisProduct.initOrderForm();
+      thisProduct.processOrder();
 
       console.log('new Product:', thisProduct);
     }
@@ -76,6 +79,17 @@
       menuContainer.appendChild(thisProduct.element);
     }
 
+    getElements() {
+      const thisProduct = this;
+
+      thisProduct.accordionTrigger = thisProduct.element.querySelector(select.menuProduct.clickable);
+      thisProduct.form = thisProduct.element.querySelector(select.menuProduct.form);
+      thisProduct.formInputs = thisProduct.form.querySelectorAll(select.all.formInputs);
+      thisProduct.cartButton = thisProduct.element.querySelector(select.menuProduct.cartButton);
+      thisProduct.priceElem = thisProduct.element.querySelector(select.menuProduct.priceElem);
+      thisProduct.amountWidgetElem = thisProduct.element.querySelector(select.menuProduct.amountWidget);
+    }
+
     initAccordion() {
       const thisProduct = this;
 
@@ -84,7 +98,7 @@
       console.log(clickableTrigger);
 
       /* START: add event listener to clickable trigger on event click */
-      clickableTrigger.addEventListener('click', function (event) {
+      thisProduct.accordionTrigger.addEventListener('click', function (event) {
         /* prevent default action for event */
         event.preventDefault();
 
@@ -103,7 +117,91 @@
       });
 
     }
+    initOrderForm() {
+      const thisProduct = this;
+      console.log('initOrderForm');
 
+      //dodanie listenerów do formularza, buttona i kontrolek formularzation;)
+
+      thisProduct.form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        thisProduct.processOrder();
+      });
+      for (let input of thisProduct.formInputs) {
+        input.addEventListener('change', function () {
+          thisProduct.processOrder();
+        });
+      }
+
+      thisProduct.cartButton.addEventListener('click', function (event) {
+        event.preventDefault();
+        thisProduct.processOrder();
+        thisProduct.addToCart();
+      });
+    }
+
+
+    processOrder() {
+      const thisProduct = this;
+      console.log('processOrder');
+
+      // covert form to object structure e.g. { sauce: ['tomato'], toppings: ['olives', 'redPeppers']}
+
+      const formData = utils.serializeFormToObject(thisProduct.form);
+
+      // console.log('formData', formData);
+
+      thisProduct.params = {};
+      // set price to default price
+      let price = thisProduct.data.price;
+
+      // pętla dla kategorii
+      for (let paramId in thisProduct.data.params) {
+        // determine param value, e.g. paramId = 'toppings', param = { label: 'Toppings', type: 'checkboxes'... }
+
+        const param = thisProduct.data.params[paramId];
+
+        // petla opcji kategorii
+        for (let optionId in param.options) {
+          // determine option value, e.g. optionId = 'olives', option = { label: 'Olives', price: 2, default: true }
+
+          const option = param.options[optionId];
+          // console.log('yes!',optionId, option);
+
+          const optionSelected = formData[paramId] && formData[paramId].includes(optionId);
+
+          const imageSelected = '.' + paramId + '-' + optionId;
+
+          const optionImage = thisProduct.element.querySelector(select.menuProduct.imageWrapper).querySelector(imageSelected);
+
+          // check if the option is not default
+          if (optionSelected) {
+            if (option.default !== true) {
+              // add option price to price variable
+              price = price + option.price;
+            } else {
+              // check if the option is default
+              if (option.default == true) {
+                // reduce price variable
+                price = price + option.price;
+              }
+            }
+            // update calculated price in the HTML
+            thisProduct.priceSingle = price;
+            // const totalPrice = price * thisProduct.amountWidget.value;
+            thisProduct.priceElem.innerHTML = price;
+          }
+
+          if (optionImage) {
+            if (optionSelected) {
+              optionImage.classList.add(classNames.menuProduct.imageVisible)
+            } else {
+              optionImage.classList.remove(classNames.menuProduct.imageVisible);
+            }
+          }
+        }
+      }
+    }
   }
 
   const app = {
