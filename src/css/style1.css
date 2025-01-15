@@ -5,3 +5,23 @@
     font-weight: 300;
     font-style: italic;
 }
+
+.header {
+    padding: 60px 0;
+    background-size: cover;
+    background-image: url('/images/italy1.png');
+    color: #fff;
+}
+
+.logo__title {
+    color: black;
+}
+
+.logo__title span {
+    font-weight: 700;
+}
+
+.logo__subtitle {
+
+    color: black;
+}

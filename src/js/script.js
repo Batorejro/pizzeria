@@ -63,6 +63,7 @@
       thisProduct.getElements();
       thisProduct.initAccordion();
       thisProduct.initOrderForm();
+      thisProduct.initAmountWidget();//widget
       thisProduct.processOrder();
 
       console.log('new Product:', thisProduct);
@@ -87,7 +88,7 @@
       thisProduct.formInputs = thisProduct.form.querySelectorAll(select.all.formInputs);
       thisProduct.cartButton = thisProduct.element.querySelector(select.menuProduct.cartButton);
       thisProduct.priceElem = thisProduct.element.querySelector(select.menuProduct.priceElem);
-      thisProduct.amountWidgetElem = thisProduct.element.querySelector(select.menuProduct.amountWidget);
+      thisProduct.amountWidgetElem = thisProduct.element.querySelector(select.menuProduct.amountWidget);//widget
     }
 
     initAccordion() {
@@ -139,8 +140,16 @@
         thisProduct.addToCart();
       });
     }
+    /////////Widget
+    initAmountWidget() {
+      const thisProduct = this;
 
-
+      thisProduct.amountWidget = new AmountWidget(thisProduct.amountWidgetElem);
+      thisProduct.amountWidgetElem.addEventListener('updated', function () {
+        thisProduct.processOrder();
+      });
+    }
+    ////////////////////////////////PROCESS ORDER
     processOrder() {
       const thisProduct = this;
       console.log('processOrder');
@@ -203,6 +212,84 @@
       }
     }
   }
+  ////////////////////////////////////////////////////////////////WIDGET CLASSA
+  class AmountWidget {
+    constructor(element) {
+      const thisWidget = this;
+
+      thisWidget.getElements(element);
+      thisWidget.input.value = settings.amountWidget.defaultValue;
+      // console.log(thisWidget.value);
+
+      thisWidget.setValue(thisWidget.input.value);
+      thisWidget.initActions();
+
+      // console.log('AmountWidget:', thisWidget);
+      // console.log('constructor arguments:', element);
+    }
+    getElements(element) {
+      const thisWidget = this;
+
+      thisWidget.element = element;
+      thisWidget.input = thisWidget.element.querySelector(select.widgets.amount.input);
+      thisWidget.linkDecrease = thisWidget.element.querySelector(select.widgets.amount.linkDecrease);
+      thisWidget.linkIncrease = thisWidget.element.querySelector(select.widgets.amount.linkIncrease);
+    }
+
+    ///////SET VALUE WIDGETOWE
+    setValue(value) { // ustawianie nowej wartości widgetu
+      const thisWidget = this;
+
+      const newValue = parseInt(value);
+
+      ////////// TO DO VALIDATION SET
+
+
+      if (newValue != thisWidget.value) {
+        // console.log(newValue);
+        // console.log(thisWidget.value);
+        thisWidget.value = newValue;
+        thisWidget.announce();
+      }
+
+      thisWidget.input.value = thisWidget.value;
+    }
+    ////////////////////////////////INIT WIDGETOWY
+    initActions() {
+      const thisWidget = this;
+
+      thisWidget.input.addEventListener('change', function () {
+        thisWidget.setValue(thisWidget.input.value);
+      });
+
+      thisWidget.linkDecrease.addEventListener('click', function (event) {
+        event.preventDefault();
+        const valueDecreased = thisWidget.value - 1;
+        thisWidget.setValue(valueDecreased);
+      });
+
+      thisWidget.linkIncrease.addEventListener('click', function (event) {
+        event.preventDefault();
+        const valueIncreased = thisWidget.value + 1;
+        thisWidget.setValue(valueIncreased);
+      });
+    }
+    //////////////////////////ANNOUNCE WIDGETOWE
+    announce() {
+      const thisWidget = this;
+
+      const event = new CustomEvent('updated', {
+        bubbles: true
+      });
+
+      thisWidget.element.dispatchEvent(event);
+    }
+
+  }
+
+
+
+
 
   const app = {
     initMenu: function () {
@@ -232,6 +319,8 @@
       thisApp.initMenu();
     },
   };
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 

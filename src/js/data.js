@@ -95,6 +95,7 @@ dataSource.products = {
       '<img class="active ingredients-herbs" src="images/salad/herbs.svg" style="z-index: 5;">',
       '<img class="active ingredients-cheese" src="images/salad/cheese.svg" style="z-index: 6;">',
       '<img class="active ingredients-pepper" src="images/salad/black-pepper.svg" style="z-index: 7;">',
+      '<img class="active ingredients-pepper" src="images/salad/ghostface-scream.svg" style="z-index: 8;">',
     ],
     params: {
       ingredients: {
@@ -108,6 +109,7 @@ dataSource.products = {
           cheese: { label: 'Cheese', price: 1 },
           herbs: { label: 'Fresh herbs', price: 1, default: true },
           pepper: { label: 'Black pepper', price: 1 },
+          stonka: { label: 'Death', price: 1 },
         },
       },
     },
