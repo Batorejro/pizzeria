@@ -1,11 +1,11 @@
 /* global Handlebars, utils, dataSource */ // eslint-disable-line no-unused-vars
-
 {
   'use strict';
 
   const select = {
     templateOf: {
       menuProduct: "#template-menu-product",
+      cartProduct: '#template-cart-product', // CODE ADDED
     },
     containerOf: {
       menu: '#product-list',
@@ -14,7 +14,7 @@
     all: {
       menuProducts: '#product-list > .product',
       menuProductsActive: '#product-list > .product.active',
-      formInputs: 'input, select',
+      formInputs: 'input, select'
     },
     menuProduct: {
       clickable: '.product__header',
@@ -26,30 +26,62 @@
     },
     widgets: {
       amount: {
-        input: 'input[name="amount"]',
+        input: 'input.amount', // CODE CHANGED
         linkDecrease: 'a[href="#less"]',
         linkIncrease: 'a[href="#more"]',
       },
     },
+    // CODE ADDED START
+    cart: {
+      productList: '.cart__order-summary',
+      toggleTrigger: '.cart__summary',
+      totalNumber: `.cart__total-number`,
+      totalPrice: '.cart__total-price strong, .cart__order-total .cart__order-price-sum strong',
+      subtotalPrice: '.cart__order-subtotal .cart__order-price-sum strong',
+      deliveryFee: '.cart__order-delivery .cart__order-price-sum strong',
+      form: '.cart__order',
+      formSubmit: '.cart__order [type="submit"]',
+      phone: '[name="phone"]',
+      address: '[name="address"]',
+    },
+    cartProduct: {
+      amountWidget: '.widget-amount',
+      price: '.cart__product-price',
+      edit: '[href="#edit"]',
+      remove: '[href="#remove"]',
+    },
   };
-
+  // CODE ADDED END
   const classNames = {
     menuProduct: {
       wrapperActive: 'active',
       imageVisible: 'active',
-    },
+    },// CODE ADDED START
+
+    cart: {
+      wrapperActive: 'active',
+    },// CODE ADDED END
+
   };
 
   const settings = {
     amountWidget: {
       defaultValue: 1,
-      defaultMin: 0,
+      defaultMin: 1,
       defaultMax: 10,
-    }
+    }, // CODE CHANGED
+
+    // CODE ADDED START
+    cart: {
+      defaultDeliveryFee: 20,
+    },
+    // CODE ADDED END
   };
+
 
   const templates = {
     menuProduct: Handlebars.compile(document.querySelector(select.templateOf.menuProduct).innerHTML),
+    cartProduct: Handlebars.compile(document.querySelector(select.templateOf.cartProduct).innerHTML),//dodano karty
   };
   ////////////////////////////////////////////////////////////////
   class Product {
@@ -140,15 +172,13 @@
         thisProduct.addToCart();
       });
     }
-    /////////Widget
-    initAmountWidget() {
-      const thisProduct = this;
+    ///////// Widget
 
-      thisProduct.amountWidget = new AmountWidget(thisProduct.amountWidgetElem);
-      thisProduct.amountWidgetElem.addEventListener('updated', function () {
-        thisProduct.processOrder();
-      });
-    }
+    ////////// Karty produktów
+
+
+
+
     ////////////////////////////////PROCESS ORDER
     processOrder() {
       const thisProduct = this;
@@ -211,8 +241,27 @@
         }
       }
     }
+    initAmountWidget() {
+      const thisProduct = this;
+
+      thisProduct.amountWidget = new AmountWidget(thisProduct.amountWidgetElem);
+      thisProduct.amountWidgetElem.addEventListener('updated', function () {
+        thisProduct.processOrder();
+      });
+    }
+    ////////// Karty produktów
+    addToCart() {
+      const thisProduct = this;
+
+      thisProduct.name = thisProduct.data.name;
+      thisProduct.amount = thisProduct.amountWidget.value;
+
+      app.cart.add(thisProduct);
+    }
   }
-  ////////////////////////////////////////////////////////////////WIDGET CLASSA
+
+
+  /////////////////////////////////////////// WIDGET CLASSA
   class AmountWidget {
     constructor(element) {
       const thisWidget = this;
@@ -236,7 +285,7 @@
       thisWidget.linkIncrease = thisWidget.element.querySelector(select.widgets.amount.linkIncrease);
     }
 
-    ///////SET VALUE WIDGETOWE
+    /////// SET VALUE WIDGETOWE
     setValue(value) { // ustawianie nowej wartości widgetu
       const thisWidget = this;
 
@@ -245,7 +294,7 @@
       ////////// TO DO VALIDATION SET
 
 
-      if (newValue != thisWidget.value) {
+      if (newValue != thisWidget.value && newValue >= settings.amountWidget.defaultMin && newValue <= settings.amountWidget.defaultMax) {
         // console.log(newValue);
         // console.log(thisWidget.value);
         thisWidget.value = newValue;
@@ -288,6 +337,72 @@
   }
 
 
+  /* pokazywanie i ukrywanie koszyka; dodawanie/usuwanie produktów; podliczanie ceny zamówienia */
+  class Cart {
+    constructor(element) {
+      const thisCart = this;
+
+      thisCart.products = []; //  przechowuje produkty dodane do koszyka
+
+      thisCart.deliveryFee = settings.cart.defaultDeliveryFee;
+
+      thisCart.getElements(element);
+      thisCart.initActions(element);
+
+      console.log('new Cart', thisCart);
+    }
+
+    getElements(element) {
+      const thisCart = this;
+
+      thisCart.dom = {}; // przechowujemy tutaj wszystkie elementy DOM, wyszukane w komponencie koszyka. Ułatwi nam to ich nazewnictwo, ponieważ zamiast np. thisCart.amountElem będziemy mieli thisCart.dom.amount
+
+      thisCart.dom.wrapper = element;
+      thisCart.dom.toggleTrigger = element.querySelector(select.cart.toggleTrigger);
+      //thisCart.dom.toggleTrigger.classList.toggle(classNames.cart.wrapperActive);
+
+      // 9.3 - 4.Pamiętamy o zdefiniowaniu thisCart.dom.productList w metodzie getElements.
+      thisCart.dom.productList = element.querySelector(select.cart.productList);
+
+      //W metodzie getElements dodaj ten kod:
+      thisCart.renderTotalsKeys = ['totalNumber', 'totalPrice', 'subtotalPrice', 'deliveryFee'];
+
+      for (let key of thisCart.renderTotalsKeys) {
+        thisCart.dom[key] = thisCart.dom.wrapper.querySelectorAll(select.cart[key]);
+      }
+      // W metodzie Cart.getElements dodaj właściwość thisCart.dom.form i przypisz jej element znaleziony we wrapperze koszyka za pomocą selektora zapisanego w select.cart.form
+      thisCart.dom.form = element.querySelector(select.cart.form);
+      console.log(thisCart.dom.form);
+      // Zacznij od dodania do metody Cart.getElements właściwości dla inputów na numer telefonu i adres.
+      thisCart.dom.phone = element.querySelector(select.cart.phone);
+      console.log(thisCart.dom.phone);
+
+      thisCart.dom.address = element.querySelector(select.cart.address);
+      console.log(thisCart.dom.address);
+
+    }
+
+    initActions(element) {
+      const thisCart = this;
+
+      thisCart.dom.toggleTrigger.addEventListener('click', function () {
+        element.classList.toggle(classNames.cart.wrapperActive);
+      });
+      // Dzięki temu możemy teraz w metodzie Cart.initActions dodać taki kod:
+      thisCart.dom.productList.addEventListener('updated', function () {
+        thisCart.update();
+      });
+
+      thisCart.dom.productList.addEventListener('remove', function () {
+        thisCart.remove(event.detail.cartProduct);
+      });
+      //Następnie w metodzie Cart.initActions dodaj event listener dla tego formularza. Nasłuchujemy eventu 'submit' i dodajemy event.preventDefault(), aby wysłanie formularza nie przeładowało strony.
+      thisCart.dom.form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        thisCart.sendOrder();
+      });
+    }
+  }
 
 
 
@@ -305,6 +420,13 @@
       const thisApp = this;
       thisApp.data = dataSource;
     },
+    initCart() {
+      const thisApp = this;
+
+      const cartElem = document.querySelector(select.containerOf.cart);
+      thisApp.cart = new Cart(cartElem);
+
+    },
 
 
     init: function () {
@@ -317,15 +439,10 @@
 
       thisApp.initData();
       thisApp.initMenu();
+      thisApp.initCart();
     },
   };
   ////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
   app.init();
 
 }
