@@ -258,7 +258,53 @@
 
       app.cart.add(thisProduct);
     }
+
+    repareCartProduct() {
+      const thisProduct = this;
+
+      const productSummary = {
+        id: thisProduct.id,
+        name: thisProduct.data.name,
+        amount: thisProduct.amountWidget.value,
+        priceSingle: thisProduct.priceSingle,
+        price: thisProduct.priceSingle * thisProduct.amountWidget.value,
+        params: thisProduct.prepareCartProductParams(),
+      };
+      return productSummary;
+    }
+    prepareCartProductParams() {
+      const thisProduct = this;
+
+      const formData = utils.serializeFormToObject(thisProduct.form);
+      const params = {};
+
+      // for every category
+      for (let paramId in thisProduct.data.params) {
+        const param = thisProduct.data.params[paramId];
+
+        // create category param in params const eg. params = { ingredients: { name: 'Ingredients', options: {}}}
+        params[paramId] = {
+          label: param.label,
+          options: {}
+        }
+
+        // for every option in this category
+        for (let optionId in param.options) {
+          const option = param.options[optionId];
+          const optionSelected = formData[paramId] && formData[paramId].includes(optionId);
+
+          if (optionSelected) {
+            params[paramId].options[optionId] = option.label;
+          }
+        }
+      }
+
+      return params;
+    }
   }
+
+
+
 
 
   /////////////////////////////////////////// WIDGET CLASSA
@@ -337,12 +383,12 @@
   }
 
 
-  /* pokazywanie i ukrywanie koszyka; dodawanie/usuwanie produktów; podliczanie ceny zamówienia */
+  // pokazywanie i ukrywanie koszyka; dodawanie/usuwanie produktów
   class Cart {
     constructor(element) {
       const thisCart = this;
 
-      thisCart.products = []; //  przechowuje produkty dodane do koszyka
+      thisCart.products = []; //  przechowuje produkty dodane 
 
       thisCart.deliveryFee = settings.cart.defaultDeliveryFee;
 
@@ -355,13 +401,13 @@
     getElements(element) {
       const thisCart = this;
 
-      thisCart.dom = {}; // przechowujemy tutaj wszystkie elementy DOM, wyszukane w komponencie koszyka. Ułatwi nam to ich nazewnictwo, ponieważ zamiast np. thisCart.amountElem będziemy mieli thisCart.dom.amount
+      thisCart.dom = {};
 
       thisCart.dom.wrapper = element;
       thisCart.dom.toggleTrigger = element.querySelector(select.cart.toggleTrigger);
       //thisCart.dom.toggleTrigger.classList.toggle(classNames.cart.wrapperActive);
 
-      // 9.3 - 4.Pamiętamy o zdefiniowaniu thisCart.dom.productList w metodzie getElements.
+
       thisCart.dom.productList = element.querySelector(select.cart.productList);
 
       //W metodzie getElements dodaj ten kod:
@@ -370,12 +416,10 @@
       for (let key of thisCart.renderTotalsKeys) {
         thisCart.dom[key] = thisCart.dom.wrapper.querySelectorAll(select.cart[key]);
       }
-      // W metodzie Cart.getElements dodaj właściwość thisCart.dom.form i przypisz jej element znaleziony we wrapperze koszyka za pomocą selektora zapisanego w select.cart.form
+
       thisCart.dom.form = element.querySelector(select.cart.form);
       console.log(thisCart.dom.form);
-      // Zacznij od dodania do metody Cart.getElements właściwości dla inputów na numer telefonu i adres.
-      thisCart.dom.phone = element.querySelector(select.cart.phone);
-      console.log(thisCart.dom.phone);
+
 
       thisCart.dom.address = element.querySelector(select.cart.address);
       console.log(thisCart.dom.address);
@@ -388,7 +432,6 @@
       thisCart.dom.toggleTrigger.addEventListener('click', function () {
         element.classList.toggle(classNames.cart.wrapperActive);
       });
-      // Dzięki temu możemy teraz w metodzie Cart.initActions dodać taki kod:
       thisCart.dom.productList.addEventListener('updated', function () {
         thisCart.update();
       });
@@ -396,22 +439,96 @@
       thisCart.dom.productList.addEventListener('remove', function () {
         thisCart.remove(event.detail.cartProduct);
       });
-      //Następnie w metodzie Cart.initActions dodaj event listener dla tego formularza. Nasłuchujemy eventu 'submit' i dodajemy event.preventDefault(), aby wysłanie formularza nie przeładowało strony.
+
       thisCart.dom.form.addEventListener('submit', function (event) {
         event.preventDefault();
         thisCart.sendOrder();
       });
     }
+    add(menuProduct) {
+      const thisCart = this;
+
+      const generatedHTML = templates.cartProduct(menuProduct);
+
+      const generatedDOM = utils.createDOMFromHTML(generatedHTML);
+
+      thisCart.dom.productList.appendChild(generatedDOM);
+
+      thisCart.products.push(new CartProduct(menuProduct, generatedDOM));
+
+      thisCart.update();
+    }
   }
 
+  ////////// CARD Products
+  class CartProduct {
+    constructor(menuProduct, element) {
+      const thisCartProduct = this;
 
+      thisCartProduct.id = menuProduct.id;
+      thisCartProduct.name = menuProduct.name;
+      thisCartProduct.amount = menuProduct.amount;
+      thisCartProduct.priceSingle = menuProduct.priceSingle;
+      thisCartProduct.price = menuProduct.price;
+
+      thisCartProduct.getElements(element);
+      thisCartProduct.initAmountWidget();
+      thisCartProduct.initActions();
+
+      // console.log(thisCartProduct);
+    }
+
+    getElements(element) {
+      const thisCartProduct = this;
+
+      thisCartProduct.dom = {};
+
+      thisCartProduct.dom.wrapper = element;
+      thisCartProduct.dom.amountWidget = element.querySelector(select.cartProduct.amountWidget);
+      thisCartProduct.dom.price = element.querySelector(select.cartProduct.price);
+      thisCartProduct.dom.edit = element.querySelector(select.cartProduct.edit);
+      thisCartProduct.dom.remove = element.querySelector(select.cartProduct.remove);
+
+    }
+
+    initAmountWidget() {
+      const thisCartProduct = this;
+
+      thisCartProduct.amountWidget = new AmountWidget(thisCartProduct.dom.amountWidget);
+
+      thisCartProduct.dom.amountWidget.addEventListener('updated', () => {
+
+        thisCartProduct.price = thisCartProduct.priceSingle * thisCartProduct.amountWidget.value;
+        thisCartProduct.dom.price.innerHTML = thisCartProduct.price;
+
+      });
+    }
+
+    initActions() {
+      const thisCartProduct = this;
+
+      thisCartProduct.dom.edit.addEventListener('click', (event) => {
+        event.preventDefault();
+      });
+
+      thisCartProduct.dom.remove.addEventListener('click', (event) => {
+        event.preventDefault();
+
+        thisCartProduct.remove();
+      });
+    }
+
+
+  }
+
+  ////////. APP
 
   const app = {
-    initMenu: function () {
+    initMenu() {
       const thisApp = this;
+      // console.log('thisApp.data:',thisApp.data);
       for (let productData in thisApp.data.products) {
         new Product(productData, thisApp.data.products[productData]);
-        console.log('thisApp.data:', thisApp.data);
       }
 
     },
