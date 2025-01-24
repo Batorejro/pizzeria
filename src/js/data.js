@@ -1,6 +1,7 @@
 const dataSource = {}; // eslint-disable-line no-unused-vars
 
 dataSource.products = {
+
   cake: {
     class: 'small',
     name: 'Zio Stefano\'s Doughnut',
@@ -9,7 +10,18 @@ dataSource.products = {
     images: [
       '<img class="active" src="images/doughnut.svg">',
     ],
+    params: {
+      cookie: {
+
+        type: 'radios',
+
+        options: {
+          donut: { label: 'Donut', price: null, default: true },
+        },
+      },
+    },
   },
+
   breakfast: {
     class: 'small',
     name: 'Zia Giulia\'s Breakfast',
