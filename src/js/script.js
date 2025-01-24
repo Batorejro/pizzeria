@@ -86,7 +86,7 @@
 
     };
 
-    /* --------------PRODUCT-------------- */
+    //////// product klassa
 
     class Product {
         constructor(id, data) {
@@ -124,7 +124,7 @@
             thisProduct.priceElem = thisProduct.element.querySelector(select.menuProduct.priceElem);
             thisProduct.amountWidgetElem = thisProduct.element.querySelector(select.menuProduct.amountWidget);
         }
-
+        //////////////////// akordeon
         initAccordion() {
             const thisProduct = this;
 
@@ -175,7 +175,7 @@
                 thisProduct.addToCart();
             });
         }
-
+        //////// process order
         processOrder() {
             const thisProduct = this;
 
@@ -236,7 +236,7 @@
                 thisProduct.processOrder();
             });
         }
-
+        ///////////// add cart
         addToCart() {
             const thisProduct = this;
 
@@ -245,7 +245,7 @@
 
         }
 
-
+        //////////////////tutaj miałem błąd - było repare a nie prepare
         prepareCartProduct() {
             const thisProduct = this;
 
@@ -292,7 +292,7 @@
         }
     }
 
-    /* --------------AMOUNT WIDGET-------------- */
+    ////////////  widget klassa
 
     class AmountWidget {
         constructor(element) {
@@ -357,7 +357,7 @@
         }
     }
 
-    /* --------------CART-------------- */
+    ///////////////// cart klassa
 
     class Cart {
         constructor(element) {
@@ -471,7 +471,7 @@
     }
 
 
-    /* --------------CART PRODUCT-------------- */
+    /////////////////  cart product klassa
 
     class CartProduct {
         constructor(menuProduct, element) {
@@ -544,7 +544,7 @@
         }
     }
 
-    /* --------------APP-------------- */
+    ///////////////////. aplikacja
 
     const app = {
         initMenu() {
@@ -571,11 +571,11 @@
         init: function () {
             const thisApp = this;
 
-            // console.log('*** App starting ***');
-            // console.log('thisApp:', thisApp);
-            // console.log('classNames:', classNames);
-            // console.log('settings:', settings);
-            // console.log('templates:', templates);
+            console.log('*** App starting ***');
+            console.log('thisApp:', thisApp);
+            console.log('classNames:', classNames);
+            console.log('settings:', settings);
+            console.log('templates:', templates);
 
             thisApp.initData();
             thisApp.initMenu();
