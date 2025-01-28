@@ -432,7 +432,7 @@
         }
         sendOrder() {
             const thisCart = this;
-            const url = settings.db.url + '/' + settings.db.order;
+            const url = settings.db.url + '/' + settings.db.orders;
 
             //Następnie w obiekcie payload zapisz ich wartości. Dodaj też wartości zliczane w update, czyli totalNumber, subtotalPrice i totalPrice. Aby dane były kompletne, dodaj też deliveryFee, mimo że jest niezmienne.
             // Obiekt payload musi też zawierać tablicę products, która na razie będzie pusta. 
